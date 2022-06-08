@@ -15,6 +15,11 @@ import * as yup from "yup";
 import { Input } from "../../components/Form/Input";
 import Header from "../../components/Header";
 import Sidebar from "../../components/Sidebar";
+import { useMutation } from 'react-query'
+import { api } from "../../services/api";
+import { queryClient } from "../../services/queryClient";
+import { useRouter } from "next/router";
+import { withSSRAuth } from "../../utils/withSSRAuth";
 
 interface CreateUserFormProps {
   name: string;
@@ -33,13 +38,26 @@ const createUserFormSchema = yup.object().shape({
 });
 
 const CreateUser: React.FC = () => {
+  const router = useRouter()
+  const createUser = useMutation(async (user: CreateUserFormProps) => {
+    const response = await api.post('users', {
+      user: { ...user, created_at: new Date()}
+    })
+    return response.data.user
+  }, {
+    onSuccess: () => {
+      queryClient.invalidateQueries('users')
+    }
+  })
   const { handleSubmit, register, formState } = useForm({
     resolver: yupResolver(createUserFormSchema),
   });
 
   const errors = formState.errors;
-  const handleRegisterUser: SubmitHandler<CreateUserFormProps> = async () => {
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+  const handleRegisterUser: SubmitHandler<CreateUserFormProps> = async (values) => {
+    await createUser.mutateAsync(values)
+    router.push('/users')
+    // await new Promise((resolve) => setTimeout(resolve, 2000));
   };
 
   return (
@@ -113,3 +131,11 @@ const CreateUser: React.FC = () => {
   );
 };
 export default CreateUser;
+
+export const getServerSideProps = withSSRAuth(async () => {
+  return {
+    props: {}
+  }
+}, {
+  permissions: ['user.create']
+})

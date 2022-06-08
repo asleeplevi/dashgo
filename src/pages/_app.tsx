@@ -3,21 +3,24 @@ import { ChakraProvider } from "@chakra-ui/react";
 import { theme } from "../styles/theme";
 import { SidebarDrawerProvider } from "../contexts/sidebarDrawerContext";
 import { makeServer } from "../services/mirage";
-import { QueryClient, QueryClientProvider } from "react-query";
+import { QueryClientProvider } from "react-query";
 import { ReactQueryDevtools } from "react-query/devtools";
+import { queryClient } from "../services/queryClient";
+import { AuthProvider } from "../contexts/authContext";
 
 function MyApp({ Component, pageProps }: AppProps) {
-  if (process.env.NODE_ENV === "development") makeServer();
+  // if (process.env.NODE_ENV === "development") makeServer();
 
-  const queryClient = new QueryClient();
   return (
     <QueryClientProvider client={queryClient}>
-      <ReactQueryDevtools />
-      <SidebarDrawerProvider>
-        <ChakraProvider theme={theme}>
-          <Component {...pageProps} />
-        </ChakraProvider>
-      </SidebarDrawerProvider>
+      <AuthProvider>
+        <ReactQueryDevtools />
+        <SidebarDrawerProvider>
+          <ChakraProvider theme={theme}>
+            <Component {...pageProps} />
+          </ChakraProvider>
+        </SidebarDrawerProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

@@ -1,9 +1,15 @@
 import { Box, Flex, SimpleGrid, Text } from "@chakra-ui/react";
+import { AuthTokenError } from '../services/errors/AuthTokenError'
 import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
 import dynamic from "next/dynamic";
 import { theme } from "../styles/theme";
 import type { ApexOptions } from "apexcharts";
+import { withSSRAuth } from "../utils/withSSRAuth";
+import { setupApiClient } from "../services/api";
+import { destroyCookie } from "nookies";
+import { useCan } from "../hooks/useCan";
+import { Can } from "../components/Can";
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
@@ -62,27 +68,43 @@ const options: ApexOptions = {
 const series = [{ name: "subscribers", data: [31, 120, 10, 28, 51, 12] }];
 
 const Dashboard: React.FC = () => {
+  const userCanSeeMetrics = useCan({
+    permissions: ['metrics.list']
+  })
   return (
     <Flex direction="column" h="100vh">
       <Header />
       <Flex w="100%" my="6" maxWidth={1480} mx="auto" px="6">
         <Sidebar />
         <SimpleGrid flex="1" gap="4" minChildWidth="320px" align="flex-start">
+          {
+            userCanSeeMetrics &&
           <Box p={["6", "8"]} bg="gray.800" pb="4" rounded={8}>
             <Text fontSize="lg" mb="4">
               Weekly Subscribers
             </Text>
             <Chart type="area" height={160} options={options} series={series} />
           </Box>
-          <Box p={["6", "8"]} bg="gray.800" rounded={8}>
-            <Text fontSize="lg" mb="4">
-              Open Tax
-            </Text>
-            <Chart type="area" height={160} options={options} series={series} />
-          </Box>
+          }
+          <Can permissions={['metrics.list']}>
+            <Box p={["6", "8"]} bg="gray.800" rounded={8}>
+              <Text fontSize="lg" mb="4">
+                Open Tax
+              </Text>
+              <Chart type="area" height={160} options={options} series={series} />
+            </Box>
+          </Can>
         </SimpleGrid>
       </Flex>
     </Flex>
   );
 };
 export default Dashboard;
+
+
+export const getServerSideProps = withSSRAuth(async (ctx) => { 
+  const apiClient = setupApiClient(ctx)
+  const response = await apiClient.get('/me') 
+ 
+  return {props: {}} 
+})

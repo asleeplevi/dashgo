@@ -6,9 +6,14 @@ import {
   RiGithubLine,
   RiInputMethodLine,
   RiUserLine,
+  RiLogoutBoxLine
 } from "react-icons/ri";
+import { useContext } from "react";
+import { AuthContext } from "../../contexts/authContext";
+
 
 export const SideBarNav = () => {
+  const { signOut } = useContext(AuthContext)
   return (
     <Stack spacing="12" align="flex-start">
       <NavSection title="GENERAL">
@@ -25,6 +30,11 @@ export const SideBarNav = () => {
         </NavLink>
         <NavLink href="/integration" icon={RiGithubLine}>
           Integration
+        </NavLink>
+      </NavSection>
+      <NavSection title="ACCOUNT">
+        <NavLink href="/" icon={RiLogoutBoxLine} onClick={signOut}>
+          Sign Out
         </NavLink>
       </NavSection>
     </Stack>
